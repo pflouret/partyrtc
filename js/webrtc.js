@@ -15,7 +15,7 @@ var PHONE = window.PHONE = function(config) {
     var mystream      = null;
     var myvideo       = document.createElement('video');
     var myconnection  = false;
-    var mediaconf     = config.media || { audio : true, video : true };
+    var mediaconf     = config.media || { audio : false, video : true };
     var conversations = {};
     var oneway        = config.oneway || false
     var broadcast     = config.broadcast || false;
@@ -48,6 +48,7 @@ var PHONE = window.PHONE = function(config) {
     // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     navigator.getUserMedia = 
         navigator.getUserMedia       ||
+        // navigator.mediaDevices.getUserMedia ||
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia    ||
         navigator.msGetUserMedia;
@@ -65,7 +66,7 @@ var PHONE = window.PHONE = function(config) {
 		},*/
 	    iceServers : [{ "url" :
 	        navigator.mozGetUserMedia    ? "stun:stun.services.mozilla.com" :
-	        navigator.webkitGetUserMedia ? "stun:stun.l.google.com:19302"   :
+	        navigator.mediaDevices.getUserMedia ? "stun:stun.l.google.com:19302"   :
 	                                       "stun:23.21.150.121"
 	    	},
 	        {url: "stun:stun.l.google.com:19302"},
@@ -371,8 +372,10 @@ var PHONE = window.PHONE = function(config) {
         // Video Settings
         video.width  = snap.width;
         video.height = snap.height;
-        video.src    = URL.createObjectURL(stream);
+        video.srcObject = stream;
         video.volume = 0.0;
+        video.playsInline = true;
+        video.muted = true;
         video.play();
 
         // Canvas Settings
@@ -401,7 +404,7 @@ var PHONE = window.PHONE = function(config) {
 
         vid.setAttribute( 'autoplay', 'autoplay' );
         vid.setAttribute( 'data-number', number );
-        vid.src = URL.createObjectURL(stream);
+        vid.srcObject = stream;
 
         talk.video = vid;
         talk.connect(talk);
@@ -469,17 +472,23 @@ var PHONE = window.PHONE = function(config) {
 	        subscribe();
             return;
         }
-        navigator.getUserMedia( mediaconf, function(stream) {
+        const handle = function(stream) {
             if (!stream) return unablecb(stream);
             mystream = stream;
             phone.mystream = stream;
             snapshots_setup(stream);
             onready();
             subscribe();
-        }, function(info) {
+        }
+        const err = function(info) {
             debugcb(info);
             return unablecb(info);
-        } );
+        }
+        if (navigator.getUserMedia) {
+            navigator.getUserMedia(mediaconf, handle, err);
+        } else {
+            navigator.mediaDevices.getUserMedia(mediaconf, handle, err);
+        }
     }
 
     // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -113,12 +113,7 @@ function showModal(){
 }
 
 function errWrap(fxn, form){
-	try {
 		return fxn(form);
-	} catch(err) {
-		alert("WebRTC is currently only supported by Chrome, Opera, and Firefox");
-		return false;
-	}
 }
 
 </script>
