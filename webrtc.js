@@ -236,6 +236,8 @@
             var video = myvideo;
 
             video.srcObject = stream;
+            video.width = "640px";
+            video.height = "480px";
             video.volume = 0.0;
             video.playsInline = true;
             video.muted = true;
